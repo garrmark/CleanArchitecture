@@ -1,3 +1,4 @@
+# lineai-intelligence-build-feedback
 name: Build
 
 on:
@@ -9,6 +10,9 @@ on:
       - CODE_OF_CONDUCT.md
       - LICENSE
       - README.md
+
+  push:
+    branches: [ 'lineai/**' ]
 
   workflow_call:
     inputs:
@@ -47,13 +51,22 @@ jobs:
       uses: actions/setup-dotnet@v4
 
     - name: Restore solution
-      run: dotnet restore
+      env:
+        NO_COLOR: "1"
+        TERM: dumb
+      run: dotnet restore 2>&1 | tee ${{ github.workspace }}/build.log
 
     - name: Build solution
-      run: dotnet build --no-restore --configuration Release
-      
+      env:
+        NO_COLOR: "1"
+        TERM: dumb
+      run: dotnet build --no-restore --configuration Release 2>&1 | tee -a ${{ github.workspace }}/build.log
+
     - name: Test solution
-      run: dotnet test --no-build --configuration Release --filter "FullyQualifiedName!~AcceptanceTests"
+      env:
+        NO_COLOR: "1"
+        TERM: dumb
+      run: dotnet test --no-build --configuration Release --filter "FullyQualifiedName!~AcceptanceTests" 2>&1 | tee -a ${{ github.workspace }}/build.log
 
     - name: Publish website
       if: ${{ inputs.build-artifacts == true }}
@@ -108,3 +121,27 @@ jobs:
         name: efbundle
         path: ./efbundle.zip
         if-no-files-found: error
+
+    - name: Ensure Lineai build.log exists
+      if: always()
+      shell: bash
+      run: |
+        if [ ! -f "${{ github.workspace }}/build.log" ]; then
+          echo "No teed build.log found; a step may have failed before log capture." > "${{ github.workspace }}/build.log"
+          echo "Workflow: ${{ github.workflow }}" >> "${{ github.workspace }}/build.log"
+          echo "Job status: ${{ job.status }}" >> "${{ github.workspace }}/build.log"
+        fi
+
+    - name: Send Lineai Build Info
+      if: always()
+      uses: lineai-intelligence/lineai-send-build-info-github-action@v1.0.3
+      with:
+        lineai_host: ${{ vars.LINEAI_HOST }}
+        agent_uuid: ${{ vars.AGENT_UUID }}
+        agent_password: ${{ secrets.AGENT_PASSWORD }}
+        scan_path: /github/workspace
+        job_name: ${{ github.workflow }}
+        build_number: ${{ github.run_number }}
+        build_status: ${{ job.status }}
+        pipeline_system: GitHub Actions
+        log_file: /github/workspace/build.log
