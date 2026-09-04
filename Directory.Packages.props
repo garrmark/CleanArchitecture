@@ -38,7 +38,7 @@
     <PackageVersion Include="Moq" Version="4.20.70" />
     <PackageVersion Include="NSwag.AspNetCore" Version="14.1.0" />
     <PackageVersion Include="NSwag.MSBuild" Version="14.1.0" />
-    <PackageVersion Include="nunit" Version="3.14.0" />
+    <PackageVersion Include="nunit" Version="4.6.1" />
     <PackageVersion Include="NUnit.Analyzers" Version="3.9.0" />
     <PackageVersion Include="NUnit3TestAdapter" Version="4.5.0" />
     <PackageVersion Include="Respawn" Version="6.2.1" />
