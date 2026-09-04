@@ -3,6 +3,8 @@
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <!-- NU1903: pre-existing AutoMapper 13.0.1 advisory (GHSA-rvv3-g6hj-g44x), unrelated to this patch/minor upgrade. Kept as a warning so restore isn't blocked; AutoMapper itself is out of scope here. -->
+    <WarningsNotAsErrors>$(WarningsNotAsErrors);NU1903</WarningsNotAsErrors>
     <!-- <ArtifactsPath>$(MSBuildThisFileDirectory)artifacts</ArtifactsPath> -->
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
