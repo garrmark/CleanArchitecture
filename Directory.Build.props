@@ -7,4 +7,13 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
+  <ItemGroup>
+    <!-- GHSA-rvv3-g6hj-g44x (AutoMapper unbounded recursion DoS) is only fixed in AutoMapper
+         15.1.1+/16.1.1+, which require a paid commercial license (AutoMapper went commercial
+         starting with v15). Staying on the last MIT-licensed line, so the advisory is
+         suppressed here and mitigated in code via ForAllMaps MaxDepth instead
+         (see Application/DependencyInjection.cs). Revisit if the team decides to purchase
+         an AutoMapper license. -->
+    <NuGetAuditSuppress Include="https://github.com/advisories/GHSA-rvv3-g6hj-g44x" />
+  </ItemGroup>
 </Project>
