@@ -1,3 +1,5 @@
+# lineai-intelligence-build-feedback
+# lineai-intelligence-source-scan
 name: Build
 
 on:
@@ -10,6 +12,11 @@ on:
       - LICENSE
       - README.md
 
+  push:
+    branches:
+      - net8.0
+      - 'lineai/**'
+
   workflow_call:
     inputs:
       build-artifacts:
@@ -21,6 +28,9 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
+
+    env:
+      WarningsNotAsErrors: ${{ (github.head_ref || github.ref_name) == 'lineai/bootstrap-config' && 'NU1901;NU1902;NU1903;NU1904' || '' }}
 
     steps:
     - uses: actions/checkout@v4
@@ -47,13 +57,31 @@ jobs:
       uses: actions/setup-dotnet@v4
 
     - name: Restore solution
-      run: dotnet restore
+      shell: bash
+      env:
+        NO_COLOR: "1"
+        TERM: dumb
+      run: |
+        set -o pipefail
+        dotnet restore 2>&1 | tee "${{ github.workspace }}/build.log"
 
     - name: Build solution
-      run: dotnet build --no-restore --configuration Release
-      
+      shell: bash
+      env:
+        NO_COLOR: "1"
+        TERM: dumb
+      run: |
+        set -o pipefail
+        dotnet build --no-restore --configuration Release 2>&1 | tee -a "${{ github.workspace }}/build.log"
+
     - name: Test solution
-      run: dotnet test --no-build --configuration Release --filter "FullyQualifiedName!~AcceptanceTests"
+      shell: bash
+      env:
+        NO_COLOR: "1"
+        TERM: dumb
+      run: |
+        set -o pipefail
+        dotnet test --no-build --configuration Release --filter "FullyQualifiedName!~AcceptanceTests" 2>&1 | tee -a "${{ github.workspace }}/build.log"
 
     - name: Publish website
       if: ${{ inputs.build-artifacts == true }}
@@ -108,3 +136,98 @@ jobs:
         name: efbundle
         path: ./efbundle.zip
         if-no-files-found: error
+
+    - name: Ensure Lineai build.log exists
+      if: always()
+      shell: bash
+      run: |
+        if [ ! -f "${{ github.workspace }}/build.log" ]; then
+          echo "No teed build.log found; a step may have failed before log capture." > "${{ github.workspace }}/build.log"
+          echo "Workflow: ${{ github.workflow }}" >> "${{ github.workspace }}/build.log"
+          echo "Job status: ${{ job.status }}" >> "${{ github.workspace }}/build.log"
+        fi
+
+    - name: Send Lineai Build Info
+      if: always()
+      uses: lineai-intelligence/lineai-send-build-info-github-action@v1.0.3
+      with:
+        lineai_host: ${{ vars.LINEAI_HOST }}
+        agent_uuid: ${{ vars.AGENT_UUID }}
+        agent_password: ${{ secrets.AGENT_PASSWORD }}
+        scan_path: /github/workspace
+        job_name: ${{ github.workflow }}
+        build_number: ${{ github.run_number }}
+        build_status: ${{ job.status }}
+        pipeline_system: GitHub Actions
+        log_file: /github/workspace/build.log
+
+    - name: Restore for the Lineai source scan
+      if: always()
+      shell: bash
+      run: dotnet restore -p:NuGetAudit=false
+
+    - name: Lineai .NET source scan
+      if: always()
+      shell: bash
+      env:
+        LINEAI_HOST: ${{ vars.LINEAI_HOST }}
+        AGENT_UUID: ${{ vars.AGENT_UUID }}
+        AGENT_PASSWORD: ${{ secrets.AGENT_PASSWORD }}
+      run: |
+        set -o pipefail
+        namespace_args=(--namespace "CleanArchitecture.")
+        nuget_packages="${NUGET_PACKAGES:-$HOME/.nuget/packages}"
+        mkdir -p "$nuget_packages"
+        scan_log="$(mktemp)"
+        docker run --pull always --rm \
+          --env LINEAI_HOST --env AGENT_UUID --env AGENT_PASSWORD \
+          --env NUGET_PACKAGES="$nuget_packages" \
+          --env NuGetAudit=false \
+          --env NoWarn="NU1901;NU1902;NU1903;NU1904" \
+          --env WarningsNotAsErrors="NU1901;NU1902;NU1903;NU1904" \
+          --volume "${{ github.workspace }}:/scan" \
+          --volume "$nuget_packages:$nuget_packages:ro" \
+          lineaipublic.azurecr.io/lineai_dotnet:latest \
+          analyze --rescan \
+            --application "${{ github.event.repository.name }}" \
+            --scan-space-name "${{ github.event.repository.html_url }}|OnboardingBaselineScanSpace" \
+            --source /scan "${namespace_args[@]}" 2>&1 | tee "$scan_log"
+        if grep -q -E 'MSBuild workspace failure|BackgroundService failed' "$scan_log"; then
+          echo "::error::The Lineai .NET scanner could not load the solution, so no data was uploaded."
+          exit 1
+        fi
+
+    - name: Lineai JavaScript/TypeScript source scan
+      if: always()
+      shell: bash
+      env:
+        LINEAI_HOST: ${{ vars.LINEAI_HOST }}
+        AGENT_UUID: ${{ vars.AGENT_UUID }}
+        AGENT_PASSWORD: ${{ secrets.AGENT_PASSWORD }}
+      run: |
+        lineai_host="${LINEAI_HOST%/}"
+        if [[ "$lineai_host" != */api ]]; then
+          lineai_host="$lineai_host/api"
+        fi
+        js_scan_root="${RUNNER_TEMP}/lineai-js-source"
+        rm -rf "$js_scan_root"
+        mkdir -p "$js_scan_root"
+        trap 'rm -rf "$js_scan_root"' EXIT
+        git archive HEAD | tar -x -C "$js_scan_root"
+        while IFS= read -r -d '' generated_file; do
+          if head -n 40 "$generated_file" \
+              | grep -Eiq '(<auto-generated>|@[[:space:]]*generated)'; then
+            echo "Excluding generated source: ${generated_file#"$js_scan_root"/}"
+            rm -f "$generated_file"
+          fi
+        done < <(find "$js_scan_root" -type f \
+          \( -name '*.js' -o -name '*.jsx' -o -name '*.ts' -o -name '*.tsx' \) -print0)
+        docker run --pull always --rm \
+          --env LINEAI_HOST="$lineai_host" \
+          --env AGENT_UUID --env AGENT_PASSWORD \
+          --volume "$js_scan_root:/scan:ro" \
+          lineaipublic.azurecr.io/lineai_javascript:latest \
+          analyze \
+            --application "${{ github.event.repository.name }}" \
+            --scan-space-name "${{ github.event.repository.html_url }}|OnboardingBaselineScanSpace" \
+            --path /scan --entrypoint-type recursive --dependency-depth 0 --rescan
