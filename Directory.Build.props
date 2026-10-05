@@ -7,4 +7,10 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
+  <!-- AutoMapper 13.0.1's DoS advisory (CVE-2026-0731) is only fixed in AutoMapper 15.1.1+/16.1.1+,
+       a major-version bump tracked as a separate upgrade PR; suppressed here so it doesn't block
+       this patch/minor dependency PR. -->
+  <ItemGroup>
+    <NuGetAuditSuppress Include="https://github.com/advisories/GHSA-rvv3-g6hj-g44x" />
+  </ItemGroup>
 </Project>
