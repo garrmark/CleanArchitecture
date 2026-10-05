@@ -6,6 +6,7 @@ using CleanArchitecture.Application.Common.Models;
 using CleanArchitecture.Application.TodoItems.Queries.GetTodoItemsWithPagination;
 using CleanArchitecture.Application.TodoLists.Queries.GetTodos;
 using CleanArchitecture.Domain.Entities;
+using Microsoft.Extensions.Logging.Abstractions;
 using NUnit.Framework;
 
 namespace CleanArchitecture.Application.UnitTests.Common.Mappings;
@@ -17,8 +18,8 @@ public class MappingTests
 
     public MappingTests()
     {
-        _configuration = new MapperConfiguration(config => 
-            config.AddMaps(Assembly.GetAssembly(typeof(IApplicationDbContext))));
+        _configuration = new MapperConfiguration(config =>
+            config.AddMaps(Assembly.GetAssembly(typeof(IApplicationDbContext))), NullLoggerFactory.Instance);
 
         _mapper = _configuration.CreateMapper();
     }
