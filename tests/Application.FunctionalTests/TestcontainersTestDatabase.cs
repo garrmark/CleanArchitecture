@@ -2,6 +2,7 @@
 using CleanArchitecture.Infrastructure.Data;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Respawn;
 using Testcontainers.MsSql;
 
@@ -31,6 +32,11 @@ public class TestcontainersTestDatabase : ITestDatabase
 
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()
             .UseSqlServer(_connectionString)
+            // IdentityDbContext resolves key-length conventions differently when it isn't built
+            // through the app's DI container (ApplicationServiceProvider), so a context built
+            // directly like this always reports a spurious pending model change. Known EF Core
+            // behavior, not a real migration gap: https://github.com/dotnet/efcore/issues/36314
+            .ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning))
             .Options;
 
         var context = new ApplicationDbContext(options);
