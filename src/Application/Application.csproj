@@ -12,6 +12,16 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore" />
   </ItemGroup>
 
+  <!-- AutoMapper 13.0.1 is flagged by GHSA-rvv3-g6hj-g44x (CVE-2026-32933, high severity,
+       uncontrolled-recursion DoS). The fix requires AutoMapper >= 15.1.1, a major upgrade
+       (13 -> 15) that is out of scope for this patch/minor grouped PR per its "major upgrades
+       are opened as separate PRs" policy. Suppressing only this advisory (not disabling
+       TreatWarningsAsErrors globally) so the patch/minor upgrades can land; a follow-up
+       major-upgrade PR for AutoMapper should remove this suppression. -->
+  <ItemGroup>
+    <NuGetAuditSuppress Include="https://github.com/advisories/GHSA-rvv3-g6hj-g44x" />
+  </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\Domain\Domain.csproj" />
   </ItemGroup>

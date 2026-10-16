@@ -32,7 +32,11 @@
     <!--#endif-->
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.8" />
     <PackageVersion Include="Microsoft.Extensions.Configuration.Json" Version="8.0.1" />
-    <PackageVersion Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="8.0.1" />
+    <!-- Microsoft.Extensions.Configuration.EnvironmentVariables 8.0.1 was never published to NuGet
+         (confirmed via the v3-flatcontainer index: the package jumps from 8.0.0 straight to 9.0.0).
+         Reverted to 8.0.0 to keep this patch/minor PR buildable; a follow-up PR can move the whole
+         Microsoft.Extensions.* family to 9.x/10.x together with the other framework-versioned packages. -->
+    <PackageVersion Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="8.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="8.0.8" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
     <PackageVersion Include="Moq" Version="4.21.0" />
