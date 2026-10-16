@@ -16,7 +16,7 @@ public class TestcontainersTestDatabase : ITestDatabase
 
     public TestcontainersTestDatabase()
     {
-        _container = new MsSqlBuilder()
+        _container = new MsSqlBuilder("mcr.microsoft.com/mssql/server:2022-CU14-ubuntu-22.04")
             .WithAutoRemove(true)
             .Build();
     }
