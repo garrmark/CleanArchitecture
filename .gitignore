@@ -16,6 +16,9 @@
 # Mono auto generated files
 mono_crash.*
 
+# SpecFlow.Plus.LivingDocPlugin generated anonymous usage id
+**/SpecFlow/userid
+
 # Build results
 tools/
 [Dd]ebug/
