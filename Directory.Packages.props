@@ -6,8 +6,14 @@
   <ItemGroup>
     <PackageVersion Include="Ardalis.GuardClauses" Version="4.6.0" />
     <PackageVersion Include="AutoMapper" Version="13.0.1" />
-    <PackageVersion Include="Azure.Extensions.AspNetCore.Configuration.Secrets" Version="1.5.2" />
     <PackageVersion Include="Azure.Identity" Version="1.12.0" />
+    <!-- Azure.Core >= 1.53.0 bundles the same credential types (DefaultAzureCredential, etc.) that Azure.Identity
+         defines, and Microsoft.Data.SqlClient transitively forces an older Azure.Identity (1.10.3) into the graph,
+         so both assemblies end up referenced together once Secrets 1.5.2 pulls in Azure.Core 1.61.0. The resulting
+         CS0433 ambiguity is resolved by aliasing the Azure.Core reference below (see Web.csproj) rather than by
+         downgrading this package. -->
+    <PackageVersion Include="Azure.Extensions.AspNetCore.Configuration.Secrets" Version="1.5.2" />
+    <PackageVersion Include="Azure.Core" Version="1.61.0" />
     <PackageVersion Include="coverlet.collector" Version="6.0.2" />
     <PackageVersion Include="FluentAssertions" Version="6.12.0" />
     <PackageVersion Include="FluentValidation.AspNetCore" Version="11.3.1" />
@@ -32,7 +38,8 @@
     <!--#endif-->
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.8" />
     <PackageVersion Include="Microsoft.Extensions.Configuration.Json" Version="8.0.1" />
-    <PackageVersion Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="8.0.1" />
+    <!-- Microsoft.Extensions.Configuration.EnvironmentVariables 8.0.1 was never published to NuGet (only 8.0.0 exists in the 8.0.x line); kept at 8.0.0 to avoid an unintended major bump to 9.0.0. -->
+    <PackageVersion Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="8.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="8.0.8" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.11.0" />
     <PackageVersion Include="Moq" Version="4.21.0" />
