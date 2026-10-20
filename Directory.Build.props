@@ -1,10 +1,16 @@
-﻿<!-- See https://aka.ms/dotnet/msbuild/customize for more details on customizing your build -->
+<!-- See https://aka.ms/dotnet/msbuild/customize for more details on customizing your build -->
 <Project>
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <!-- <ArtifactsPath>$(MSBuildThisFileDirectory)artifacts</ArtifactsPath> -->
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
+  <ItemGroup>
+    <!-- AutoMapper 13.0.1 has no free-tier fix for GHSA-rvv3-g6hj-g44x: the patched 15.1.1+/16.1.1+
+         releases require a paid LuckyPenny Software commercial license. Suppress until the team
+         decides whether to buy a license or migrate off AutoMapper. -->
+    <NuGetAuditSuppress Include="https://github.com/advisories/GHSA-rvv3-g6hj-g44x" />
+  </ItemGroup>
 </Project>

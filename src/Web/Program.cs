@@ -24,7 +24,7 @@ else
 
 app.UseHealthChecks("/health");
 app.UseHttpsRedirection();
-app.UseStaticFiles();
+app.MapStaticAssets();
 
 app.UseSwaggerUi(settings =>
 {
@@ -34,9 +34,9 @@ app.UseSwaggerUi(settings =>
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller}/{action=Index}/{id?}");
+    pattern: "{controller}/{action=Index}/{id?}").WithStaticAssets();
 
-app.MapRazorPages();
+app.MapRazorPages().WithStaticAssets();
 
 app.MapFallbackToFile("index.html");
 
