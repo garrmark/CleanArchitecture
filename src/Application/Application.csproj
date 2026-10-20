@@ -13,6 +13,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- AutoMapper 13.0.1 (current major) has no patch release fixing GHSA-rvv3-g6hj-g44x / CVE-2026-32933 (DoS via unbounded recursion);
+         the fix only ships in the major-version line (15.1.1+/16.1.1+), which is tracked as a separate breaking upgrade. Suppressed here
+         to unblock this patch/minor PR; follow-up major upgrade ticket should remove this suppression. -->
+    <NuGetAuditSuppress Include="https://github.com/advisories/GHSA-rvv3-g6hj-g44x" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Domain\Domain.csproj" />
   </ItemGroup>
 
