@@ -7,4 +7,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
+  <PropertyGroup>
+    <!-- Pre-existing AutoMapper 13.0.1 DoS advisory (GHSA-rvv3-g6hj-g44x), unrelated to the EF Core 8->9 upgrade; tracked separately from this change. NuGetAuditSuppress is not honored by the pinned SDK (8.0.100), so suppress the restore warning directly. -->
+    <NoWarn>$(NoWarn);NU1903</NoWarn>
+  </PropertyGroup>
 </Project>

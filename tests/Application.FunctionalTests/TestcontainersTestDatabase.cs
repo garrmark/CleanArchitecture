@@ -29,11 +29,7 @@ public class TestcontainersTestDatabase : ITestDatabase
 
         _connection = new SqlConnection(_connectionString);
 
-        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-            .UseSqlServer(_connectionString)
-            .Options;
-
-        var context = new ApplicationDbContext(options);
+        var context = TestDbContextFactory.Create(builder => builder.UseSqlServer(_connectionString));
 
         context.Database.Migrate();
 
